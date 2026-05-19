@@ -1,19 +1,8 @@
 # RTL Design and Synthesis Workshop – Day 1
 
-## Topics Covered
-- Introduction to RTL Design
-- Simulator
-- Design and Testbench
-- Icarus Verilog Flow
-- GTKWave
-- Yosys Introduction
-- Gate Libraries
-- Technology Mapping
-- Netlist Generation
+## 1. Introduction to RTL Simulation
 
----
-
-# 1. Simulator
+### Simulator
 
 RTL design is verified using simulation.
 
@@ -26,11 +15,11 @@ For this workshop:
 
 ---
 
-# 2. Design
+### Design
 
 Design is the actual Verilog RTL code implementing the intended functionality.
 
-Example:
+Examples:
 - Multiplexer
 - Decoder
 - Flip-flop
@@ -38,7 +27,7 @@ Example:
 
 ---
 
-# 3. Testbench
+### Testbench
 
 A testbench applies stimulus (test vectors) to the design and observes outputs.
 
@@ -49,7 +38,7 @@ Functions of testbench:
 
 ---
 
-# 4. How Simulator Works
+### How Simulator Works
 
 - Simulator monitors input changes
 - Whenever input changes, output is evaluated
@@ -57,7 +46,7 @@ Functions of testbench:
 
 ---
 
-# 5. Testbench Architecture
+### Testbench Architecture
 
 Testbench contains:
 
@@ -67,7 +56,7 @@ Testbench contains:
 
 ---
 
-# 6. Iverilog Simulation Flow
+### Iverilog Simulation Flow
 
 Flow:
 
@@ -78,9 +67,9 @@ Design + Testbench
 
 ---
 
-# 7. Lab: Simulating 2:1 Multiplexer
+## 2. Lab: Simulating 2:1 Multiplexer
 
-## Clone Repository
+### Clone Repository
 
 ```bash
 git clone https://github.com/kunalg123/sky130RTLDesignAndSynthesisWorkshop.git
@@ -92,7 +81,7 @@ cd sky130RTLDesignAndSynthesisWorkshop/verilog_files
 
 ---
 
-# 8. Install Required Tools
+### Install Required Tools
 
 ```bash
 sudo apt install iverilog
@@ -104,7 +93,7 @@ sudo apt install gtkwave
 
 ---
 
-# 9. Compile Design
+### Compile Design
 
 ```bash
 iverilog good_mux.v tb_good_mux.v
@@ -112,7 +101,7 @@ iverilog good_mux.v tb_good_mux.v
 
 ---
 
-# 10. Run Simulation
+### Run Simulation
 
 ```bash
 ./a.out
@@ -120,7 +109,7 @@ iverilog good_mux.v tb_good_mux.v
 
 ---
 
-# 11. Open Waveform
+### Open Waveform
 
 ```bash
 gtkwave tb_good_mux.vcd
@@ -128,9 +117,9 @@ gtkwave tb_good_mux.vcd
 
 ---
 
-# 12. Verilog Code Analysis
+## 3. Verilog Code Analysis
 
-## good_mux.v
+### good_mux.v
 
 ```verilog
 module good_mux (input i0, input i1, input sel, output reg y);
@@ -148,7 +137,7 @@ endmodule
 
 ---
 
-## Working
+### Working
 
 Inputs:
 - i0
@@ -164,7 +153,7 @@ Logic:
 
 ---
 
-# 13. Introduction to Yosys
+## 4. Introduction to Yosys
 
 Yosys is an open-source synthesis tool.
 
@@ -176,15 +165,15 @@ Functions:
 
 ---
 
-# 14. Gate Library (.lib)
+## 5. Gate Library (.lib)
 
 A `.lib` file contains timing and gate information.
 
-Example:
-- AND gate
-- OR gate
-- MUX gate
-- NOT gate
+Example gates:
+- AND
+- OR
+- MUX
+- NOT
 
 Different gate flavors exist for:
 - speed
@@ -194,9 +183,9 @@ Different gate flavors exist for:
 
 ---
 
-# 15. Yosys Synthesis Flow
+## 6. Yosys Synthesis Flow
 
-## Start Yosys
+### Start Yosys
 
 ```bash
 yosys
@@ -204,7 +193,7 @@ yosys
 
 ---
 
-## Read Liberty File
+### Read Liberty File
 
 ```bash
 read_liberty -lib sky130_fd_sc_hd__tt_025C_1v80.lib
@@ -212,7 +201,7 @@ read_liberty -lib sky130_fd_sc_hd__tt_025C_1v80.lib
 
 ---
 
-## Read Verilog Design
+### Read Verilog Design
 
 ```bash
 read_verilog good_mux.v
@@ -220,7 +209,7 @@ read_verilog good_mux.v
 
 ---
 
-## Synthesize Design
+### Synthesize Design
 
 ```bash
 synth -top good_mux
@@ -228,7 +217,7 @@ synth -top good_mux
 
 ---
 
-## Technology Mapping
+### Technology Mapping
 
 ```bash
 abc -liberty sky130_fd_sc_hd__tt_025C_1v80.lib
@@ -236,7 +225,7 @@ abc -liberty sky130_fd_sc_hd__tt_025C_1v80.lib
 
 ---
 
-## Show Gate-Level Netlist
+### Show Gate-Level Netlist
 
 ```bash
 show
@@ -244,9 +233,9 @@ show
 
 ---
 
-# 16. Write Synthesized Netlist
+## 7. Netlist Generation
 
-## Write Verilog Netlist
+### Write Verilog Netlist
 
 ```bash
 write_verilog good_mux_netlist.v
@@ -254,7 +243,7 @@ write_verilog good_mux_netlist.v
 
 ---
 
-## Open Netlist
+### Open Netlist
 
 ```bash
 !gvim good_mux_netlist.v
@@ -262,7 +251,7 @@ write_verilog good_mux_netlist.v
 
 ---
 
-## Remove Attributes
+### Remove Attributes
 
 ```bash
 write_verilog -noattr good_mux_netlist.v
@@ -270,7 +259,7 @@ write_verilog -noattr good_mux_netlist.v
 
 ---
 
-## Open Clean Netlist
+### Open Clean Netlist
 
 ```bash
 !gvim good_mux_netlist.v
@@ -278,7 +267,7 @@ write_verilog -noattr good_mux_netlist.v
 
 ---
 
-# 17. Learning Outcome
+## 8. Learning Outcome
 
 - Learned RTL simulation flow
 - Understood testbench concept
@@ -288,5 +277,3 @@ write_verilog -noattr good_mux_netlist.v
 - Understood liberty files
 - Generated synthesized netlist
 - Learned basic Linux workflow
-
----
