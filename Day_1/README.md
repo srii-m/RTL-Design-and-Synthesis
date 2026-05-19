@@ -137,22 +137,6 @@ endmodule
 
 ---
 
-### Working
-
-Inputs:
-- i0
-- i1
-- sel
-
-Output:
-- y
-
-Logic:
-- sel = 1 → y = i1
-- sel = 0 → y = i0
-
----
-
 ## 4. Introduction to Yosys
 
 Yosys is an open-source synthesis tool.
