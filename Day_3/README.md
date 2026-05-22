@@ -1,220 +1,204 @@
-# Day 3: Combinational and Sequential Optimization
+# RTL Design and Synthesis Workshop – Day 3
 
-Welcome to Day 3 of this workshop! Today we discuss optimization of combinational and sequential circuits, introducing techniques to enhance efficiency and performance.
+## 
+1. Combinational Optimization Techniques
 
----
+### Constant Propagation
 
-## Table of Contents
-
-- [1. Constant Propagation](#1-constant-propagation)
-- [2. State Optimization](#2-state-optimization)
-- [3. Cloning](#3-cloning)
-- [4. Retiming](#4-retiming)
-- [5. Labs on Optimization](#5-labs-on-optimization)
-  - [Lab 1](#lab-1)
-  - [Lab 2](#lab-2)
-  - [Lab 3](#lab-3)
-  - [Lab 4](#lab-4)
-  - [Lab 5](#lab-5)
-  - [Lab 6](#lab-6)
-
----
-
-## 1. Constant Propagation
-
-In VLSI design, constant propagation is a compiler optimization technique used to replace variables with their constant values during synthesis. This can simplify design and enhance performance.
-
-**How it works:**  
-Constant propagation analyzes the design code to identify variables with constant values. These are replaced directly, allowing tools to simplify logic and reduce circuit size.
+Constant propagation is an optimization technique where compile-time constants are substituted directly into expressions to eliminate redundant variables. Replacing known variables with their static values allows the synthesis engine to optimize gate structures and eliminate dead logic.
 
 **Benefits:**
-- **Reduced Complexity:** Simpler logic, smaller circuit.
-- **Performance Improvement:** Faster execution and reduced delays.
-- **Resource Optimization:** Fewer gates or flip-flops required.
-
-![Constant Propagation Example](https://github.com/user-attachments/assets/d7f06056-66c1-44af-99a8-623fdf5879be)
+- **Reduced Complexity** → Creates cleaner logic structures, shrinking the overall gate count and circuit area.
+- **Performance Improvement** → Decreases routing propagation delays and minimizes setup times.
+- **Resource Optimization** → Limits the allocation of unnecessary logic components and sequential elements.
 
 ---
 
-## 2. State Optimization
+### State Optimization
 
-State optimization refines finite state machines (FSMs) to improve efficiency in IC design. It reduces the number of states, optimizes encoding, and minimizes logic.
+State optimization streamlines Finite State Machine (FSM) models to achieve maximum layout efficiency in hardware designs.
 
-**How it is done:**
-- **State Reduction:** Merge equivalent states using algorithms.
-- **State Encoding:** Assign optimal codes to states.
-- **Logic Minimization:** Use Boolean algebra or tools for compact equations.
-- **Power Optimization:** Techniques like clock gating reduce dynamic power.
-
----
-
-## 3. Cloning
-
-Cloning duplicates a logic cell or module to optimize performance, reduce power, or improve timing by balancing load or reducing wire length.
-
-**How it’s done:**
-- Identify critical paths using analysis tools.
-- Duplicate the target cell/module.
-- Redistribute connections to balance load.
-- Place and route the cloned cell.
-- Verify improvement via timing and power analysis.
-
-![Cloning Example](https://github.com/user-attachments/assets/6bdd2c12-02a2-4ea5-895c-98e349b93bac)
+**Key Implementation Tasks:**
+- **State Reduction** → Eliminates redundant and equivalent states through minimization algorithms.
+- **State Encoding** → Maps state assignments to optimal structural styles (e.g., One-Hot, Binary, Gray encoding).
+- **Logic Minimization** → Combines combinational logic equations to minimize hardware layout demands.
+- **Power Optimization** → Lowers dynamic power consumption through specialized architectural techniques like clock gating.
 
 ---
 
-## 4. Retiming
+## 
+2. Sequential Optimization Techniques
 
-Retiming is a design optimization technique that improves circuit performance by repositioning registers (flip-flops) without changing functionality.
+### Cloning
 
-**How it is done:**
-1. **Graph Representation:** Model circuit as a directed graph.
-2. **Register Repositioning:** Move registers to balance path delays.
-3. **Constraints Analysis:** Maintain timing and functional equivalence.
-4. **Optimization:** Adjust register positions to minimize clock period and optimize power.
+Cloning replicates heavily loaded logic cells or sub-modules to alleviate severe fan-out constraints, improve power distribution, and meet tight timing requirements along critical paths.
+
+**Workflow:**
+
+## 
+1. Pinpoint highly loaded, path-critical cells using static timing analysis tools.
+
+## 
+2. Duplicate the target gate or logic block within the netlist.
+
+## 
+3. Divide the original fan-out load between the source and cloned cells to reduce drive stress.
+
+## 
+4. Execute localized cell placement and signal rerouting.
+
+## 
+5. Re-evaluate post-route timing profiles to confirm setup and hold closure.
 
 ---
 
-## 5. Labs on Optimization
+### Retiming
 
-### Lab 1
+Retiming shifts register positions across combinational logic boundaries to minimize the critical path delay without altering the functional output of the system.
 
-Below is the Verilog code for Lab 1:
+**Workflow:**
 
+## 
+1. **Graph Representation** → Models the digital design network as a directed graph where edges represent logic delays.
+
+## 
+2. **Register Repositioning** → Shifts flip-flops forward or backward across logic gates to equalize path delays.
+
+## 
+3. **Constraints Analysis** → Verifies that timing bounds and functional system integrity remain structurally unchanged.
+
+## 
+4. **Optimization** → Restructures register locations to scale down clock period requirements and optimize dynamic power.
+
+---
+
+## 
+3. Labs: Combinational Optimization
+
+### Lab 1: Ternary Conditional Optimization
+
+Verilog Design (`opt_check.v`):
 ```verilog
 module opt_check (input a , input b , output y);
-	assign y = a?b:0;
+
+assign y = a ? b : 1'b0;
+
 endmodule
 ```
 
-**Explanation:**
-- `assign y = a ? b : 0;` means:
-  - If `a` is true, `y` is assigned the value of `b`.
-  - If `a` is false, `y` is 0.
+**Functional Evaluation:**
 
-Follow the steps from [Day 1 Synthesis Lab](https://github.com/Ahtesham18112011/RTL_workshop/tree/main/Day_1#6-synthesis-lab-with-yosys) and add the following between `abc -liberty` and `synth -top`:
-```shell
+Evaluates input a: if high, passes signal b; if low, ties output y to ground.
+
+Optimization Command Insertion (Execute between synth -top and abc -liberty):
+
+```bash
+```bash
 opt_clean -purge
 ```
-
-![Lab 1 Output](https://github.com/user-attachments/assets/4d224d8d-f6f5-4a37-9732-ab570b64e31e)
-
----
-
-### Lab 2
-
-Verilog code:
+Lab 2: Direct Constant Mapping
+Verilog Design (opt_check
+2.v):
 
 ```verilog
 module opt_check2 (input a , input b , output y);
-	assign y = a?1:b;
+
+assign y = a ? 1'b1 : b;
+
 endmodule
 ```
 
-**Code Analysis:**
-- Acts as a multiplexer:
-  - `y = 1` if `a` is true.
-  - `y = b` if `a` is false.
+**Functional Evaluation:**
 
-![Lab 2 Output](https://github.com/user-attachments/assets/59545745-8a8b-4afd-b4d5-0a3ad1d5b80e)
+Emulates OR-configured muxing logic: pulls y directly to logic 1 when a is asserted, otherwise passes input b.
 
----
-
-### Lab 3
-
-Verilog code:
+Lab 3: Multiplexer Optimization Test
+Verilog Design (opt_check
+3.v):
 
 ```verilog
-module opt_check2 (input a , input b , output y);
-	assign y = a?1:b;
+module opt_check3 (input a , input b , output y);
+
+assign y = a ? 1'b1 : b;
+
 endmodule
 ```
 
-**Functionality:**  
-2-to-1 multiplexer; `y = a ? 1 : b` (outputs `1` when `a` is true, otherwise `b`).
+**Functional Evaluation:**
 
-![Lab 3 Output](https://github.com/user-attachments/assets/157b16d3-cecd-441a-aacf-bae296910886)
+Implements a basic 2-to-1 multiplexing structure mapping output to a static state based on the value of condition line a.
 
----
-
-### Lab 4
-
-Verilog code:
+Lab 4: Nested Logic Pruning
+Verilog Design (opt_check
+4.v):
 
 ```verilog
 module opt_check4 (input a , input b , input c , output y);
- assign y = a?(b?(a & c ):c):(!c);
- endmodule
-```
 
-**Functionality:**
-- Three inputs (`a`, `b`, `c`), output `y`.
-- Nested ternary logic:
-  - If `a = 1`, `y = c`.
-  - If `a = 0`, `y = !c`.
-- Logic simplifies to:  
-  `y = a ? c : !c`
+assign y = a ? (b ? (a & c) : c) : (!c);
 
-![Lab 4 Output](https://github.com/user-attachments/assets/08d1e447-78c6-47c4-8c99-239645b38617)
-
----
-
-### Lab 5
-
-Verilog code:
-
-```verilog
-module dff_const1(input clk, input reset, output reg q);
-always @(posedge clk, posedge reset)
-begin
-	if(reset)
-		q <= 1'b0;
-	else
-		q <= 1'b1;
-end
 endmodule
 ```
 
-**Functionality:**
-- D flip-flop with:
-  - Asynchronous reset to 0
-  - Loads constant `1` when not in reset
+**Functional Evaluation:**
 
-![Lab 5 Output](https://github.com/user-attachments/assets/a42fac06-a092-4efc-be39-33b263caaaa1)
+Processes multiple inputs through layered ternary parameters. The synthesis engine automatically prunes redundant checks (b and the a & c term when a is verified high), reducing the logic down to a simple 2-input XOR-type expression:
+y = a ? c : !c
 
----
-
-### Lab 6
-
-Verilog code:
+## 
+4. Labs: Sequential Optimization
+Lab 5: Fixed Value Asynchronous Register
+Verilog Design (dff_const
+1.v):
 
 ```verilog
-module dff_const2(input clk, input reset, output reg q);
+module dff_const1 (input clk, input reset, output reg q);
+
 always @(posedge clk, posedge reset)
 begin
-	if(reset)
-		q <= 1'b1;
-	else
-		q <= 1'b1;
+    if(reset)
+        q <= 1'b0;
+    else
+        q <= 1'b1;
 end
+
 endmodule
 ```
 
-**Functionality:**
-- D flip-flop always sets output `q` to `1` (regardless of reset or clock).
+**Functional Evaluation:**
 
-![Lab 6 Output](https://github.com/user-attachments/assets/ae45f7db-0a7f-4256-b43b-01cc4a1588f7)
+Instantiates a D flip-flop configured with an asynchronous reset to ground (1'b0). During standard operation, the register continuously latches a constant logic 1 on every rising clock edge.
 
----
+Lab 6: Constant Logic Simplification
+Verilog Design (dff_const
+2.v):
 
-## Summary
-- **Focus:** Optimization techniques for combinational and sequential circuits in digital design, with practical Verilog labs.
-  
-- **Topics Covered:**
-  1. **Constant Propagation:** Replacing variables with constant values to simplify logic and improve circuit efficiency.
-  2. **State Optimization:** Reducing states and optimizing encoding in finite state machines to use less logic and power.
-  3. **Cloning:** Duplicating logic cells/modules to improve timing and balance load.
-  4. **Retiming:** Repositioning registers in a circuit to enhance performance without altering its function.
+```verilog
+module dff_const2 (input clk, input reset, output reg q);
 
-- **Labs:** Six practical Verilog labs illustrate these concepts, including examples of combinational logic optimizations and D flip-flop behaviors, each with code snippets and output images.
+always @(posedge clk, posedge reset)
+begin
+    if(reset)
+        q <= 1'b1;
+    else
+        q <= 1'b1;
+end
 
+endmodule
+```
+
+**Functional Evaluation:**
+
+Synthesizes a sequential block where both the reset path and standard evaluation path route to an identical logic high state (1'b1). The synthesis compiler optimizes out the register entirely, hardwiring output q directly to the VCC rail.
+
+## 
+5. Learning Outcome
+Applied constant propagation approaches to scale down redundant logic and gate counts.
+
+Evaluated methods for structural FSM state minimization and low-power encoding strategies.
+
+Analyzed cell cloning mechanics and loads balancing to resolve setup and hold violations.
+
+Implemented sequential retiming steps to adjust clock boundaries across complex logic networks.
+
+Simulated and synthesized multiple optimization configurations utilizing Yosys logic sweeping scripts.
