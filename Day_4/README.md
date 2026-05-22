@@ -1,232 +1,244 @@
-# Day 4: Gate-Level Simulation (GLS), Blocking vs. Non-Blocking in Verilog, and Synthesis-Simulation Mismatch
-
-Welcome to Day 4 of the RTL Workshop! Today’s session focuses on three essential topics in digital design:
-
-- **Gate-Level Simulation (GLS)**
-- **Blocking vs. Non-Blocking Assignments in Verilog**
-- **Synthesis-Simulation Mismatch**
-
-You’ll learn both the theory and practical implications, complete with hands-on labs to reinforce your understanding.
+# RTL Design and Synthesis Workshop – Day 3
 
 ---
 
-## Table of Contents
+# 1. Combinational Optimization Techniques
 
-- [1. Gate-Level Simulation (GLS)](#1-gate-level-simulation-gls)
-- [2. Synthesis-Simulation Mismatch](#2-synthesis-simulation-mismatch)
-- [3. Blocking vs. Non-Blocking Assignments in Verilog](#3-blocking-vs-non-blocking-assignments-in-verilog)
-  - [3.1 Blocking Statements](#31-blocking-statements)
-  - [3.2 Non-Blocking Statements](#32-non-blocking-statements)
-  - [3.3 Comparison Table](#33-comparison-table)
-- [4. Labs](#4-labs)
-- [5. Summary](#5-summary)
+## Constant Propagation
 
----
+Constant propagation is an optimization technique where compile-time constants are substituted directly into expressions to eliminate redundant variables.
 
-## 1. Gate-Level Simulation (GLS)
+Replacing known variables with static values allows the synthesis engine to:
+- simplify gate structures,
+- remove dead logic,
+- reduce hardware complexity.
 
-**GLS** stands for **Gate-Level Simulation**. It is a critical verification step in the VLSI design flow where the synthesized gate-level netlist of a digital circuit is simulated to validate:
+### Benefits
 
-- Functional correctness
-- Timing behavior
-- Power estimates
-- Test structures (e.g., scan chains for DFT)
-
-### Why Perform GLS?
-
-- **Synthesis Validation**: Ensures that synthesis tools faithfully translate RTL into gates.
-- **Timing Verification**: Simulates with realistic delays (from SDF files), allowing you to check for timing violations (e.g., setup/hold errors).
-- **Testability**: Confirms that scan chains and other test features work post-synthesis.
-
-### When is GLS Performed?
-
-- **After synthesis**: Once the RTL is converted into a gate-level netlist.
-- **Before physical design**: To catch issues early, before layout.
-
-### Types of GLS
-
-- **Functional GLS**: Logic-only simulation, often with zero or unit delays.
-- **Timing GLS**: Uses annotated timing data to check real-world timing behavior.
+- **Reduced Complexity** → Cleaner logic structures and lower gate count.
+- **Performance Improvement** → Reduced propagation delay and improved timing.
+- **Resource Optimization** → Eliminates unnecessary logic resources.
 
 ---
 
-## 2. Synthesis-Simulation Mismatch
+## State Optimization
 
-A **synthesis-simulation mismatch** occurs when the simulation results of RTL (pre-synthesis) do not match simulation results of the gate-level netlist (post-synthesis) or hardware. Reasons include:
+State optimization improves the efficiency of Finite State Machine (FSM) implementations.
 
-- **Non-synthesizable constructs**: Use of delays, initial blocks, or other code not supported by synthesis.
-- **Incomplete or ambiguous coding**: E.g., missing `else` clauses, improper sensitivity lists.
-- **Tool interpretation differences**: Simulation and synthesis tools may interpret ambiguous RTL differently.
+### Key Implementation Tasks
 
-**Key Point:** Always write synthesizable, unambiguous RTL and follow good coding practices to minimize mismatches.
-
----
-
-## 3. Blocking vs. Non-Blocking Assignments in Verilog
-
-Verilog offers two types of procedural assignments:
-
-### 3.1 Blocking Statements (`=`)
-
-- **Syntax:** `=`
-- **Execution:** Sequential, executes immediately.
-- **Suitable for:** Combinational logic (e.g., `always @(*)`).
-- **Example:**  
-  ```verilog
-  always @(*) y = a & b;
-  ```
-
-### 3.2 Non-Blocking Statements (`<=`)
-
-- **Syntax:** `<=`
-- **Execution:** Scheduled, executes concurrently at the end of the time step.
-- **Suitable for:** Sequential logic (e.g., `always @(posedge clk)`).
-- **Example:**  
-  ```verilog
-  always @(posedge clk) q <= d;
-  ```
-
-### 3.3 Comparison Table
-
-| **Blocking (`=`)**                        | **Non-Blocking (`<=`)**                   |
-|-------------------------------------------|--------------------------------------------|
-| Uses `=` operator                         | Uses `<=` operator                         |
-| Sequential, immediate execution           | Concurrent, scheduled at end of timestep   |
-| Updates happen instantly in code order    | Updates applied after time step            |
-| For combinational logic, temp variables   | For sequential logic, registers/flip-flops |
-| Infers combinational logic (gates)        | Infers sequential logic (flip-flops)       |
+- **State Reduction** → Removes redundant or equivalent states.
+- **State Encoding** → Uses optimized encoding methods such as:
+  - One-Hot
+  - Binary
+  - Gray Encoding
+- **Logic Minimization** → Reduces combinational hardware complexity.
+- **Power Optimization** → Uses techniques like clock gating to reduce dynamic power.
 
 ---
 
-## 4. Labs
+# 2. Sequential Optimization Techniques
 
-### Lab 1: Ternary Operator MUX
+## Cloning
 
-Verilog code for a simple 2:1 multiplexer using a ternary operator:
+Cloning duplicates highly loaded logic cells to reduce fan-out delay and improve timing performance.
+
+### Workflow
+
+1. Identify highly loaded critical cells.
+2. Duplicate the required logic block.
+3. Split the fan-out load between original and cloned cells.
+4. Perform placement and rerouting.
+5. Re-check timing closure.
+
+---
+
+## Retiming
+
+Retiming shifts registers across combinational logic to reduce critical path delay without changing functionality.
+
+### Workflow
+
+1. **Graph Representation** → Model the design as a timing graph.
+2. **Register Repositioning** → Move registers across logic stages.
+3. **Constraint Analysis** → Verify timing and functionality.
+4. **Optimization** → Improve clock frequency and timing.
+
+---
+
+# 3. Labs: Combinational Optimization
+
+## Lab 1: Ternary Conditional Optimization
+
+### Verilog Design (`opt_check.v`)
 
 ```verilog
-module ternary_operator_mux (input i0, input i1, input sel, output y);
-  assign y = sel ? i1 : i0;
-endmodule
-```
-- **Function:** `y = i1` if `sel = 1`; else `y = i0`.
+module opt_check (
+    input a,
+    input b,
+    output y
+);
 
-![lab1](https://github.com/user-attachments/assets/3f5eb05a-1861-4bb8-940c-6ff9f2af87fb)
+assign y = a ? b : 1'b0;
 
----
-
-### Lab 2: Synthesis Using Yosys
-
-Synthesize the above MUX using Yosys.  
-_Follow the standard Yosys synthesis flow._
-
-![lab2](https://github.com/user-attachments/assets/7a0cdc7c-cbbd-4943-bd3d-130a0d66b9b1)
-
----
-
-### Lab 3: Gate-Level Simulation (GLS) of MUX
-
-Run GLS for the synthesized MUX.  
-Use this command (adjust paths as needed):
-
-```shell
-iverilog /path/to/primitives.v /path/to/sky130_fd_sc_hd.v ternary_operator_mux.v testbench.v
-```
-
-![lab3](https://github.com/user-attachments/assets/9acf45b3-2e42-4ac1-88ae-b4a494cc8d87)
-
----
-
-### Lab 4: Bad MUX Example (Common Pitfalls)
-
-Verilog code with intentional issues:
-
-```verilog
-module bad_mux (input i0, input i1, input sel, output reg y);
-  always @ (sel) begin
-    if (sel)
-      y <= i1;
-    else 
-      y <= i0;
-  end
 endmodule
 ```
 
-#### Issues:
-- **Incomplete sensitivity list**: Should include `i0`, `i1`, and `sel`.
-- **Non-blocking assignment in combinational logic**: Should use blocking assignments (`=`).
+### Functional Evaluation
 
-**Corrected version:**
+- If `a = 1`, output follows `b`
+- If `a = 0`, output becomes `0`
+
+### Optimization Command
+
+Execute between `synth -top` and `abc -liberty`:
+
+```bash
+opt_clean -purge
+```
+
+---
+
+## Lab 2: Direct Constant Mapping
+
+### Verilog Design (`opt_check2.v`)
+
 ```verilog
-always @ (*) begin
-  if (sel)
-    y = i1;
-  else
-    y = i0;
+module opt_check2 (
+    input a,
+    input b,
+    output y
+);
+
+assign y = a ? 1'b1 : b;
+
+endmodule
+```
+
+### Functional Evaluation
+
+Implements OR-style mux logic:
+- When `a = 1`, output becomes logic HIGH.
+- Otherwise output follows `b`.
+
+---
+
+## Lab 3: Multiplexer Optimization Test
+
+### Verilog Design (`opt_check3.v`)
+
+```verilog
+module opt_check3 (
+    input a,
+    input b,
+    output y
+);
+
+assign y = a ? 1'b1 : b;
+
+endmodule
+```
+
+### Functional Evaluation
+
+Implements a simple 2:1 multiplexer structure.
+
+---
+
+## Lab 4: Nested Logic Pruning
+
+### Verilog Design (`opt_check4.v`)
+
+```verilog
+module opt_check4 (
+    input a,
+    input b,
+    input c,
+    output y
+);
+
+assign y = a ? (b ? (a & c) : c) : (!c);
+
+endmodule
+```
+
+### Functional Evaluation
+
+The synthesis engine removes redundant logic and simplifies the expression to:
+
+```verilog
+y = a ? c : !c;
+```
+
+---
+
+# 4. Labs: Sequential Optimization
+
+## Lab 5: Fixed Value Asynchronous Register
+
+### Verilog Design (`dff_const1.v`)
+
+```verilog
+module dff_const1 (
+    input clk,
+    input reset,
+    output reg q
+);
+
+always @(posedge clk, posedge reset)
+begin
+    if (reset)
+        q <= 1'b0;
+    else
+        q <= 1'b1;
 end
-```
 
-![lab4](https://github.com/user-attachments/assets/4c2ede06-0605-4ff0-99cb-fc89844b89e4)
-
----
-
-### Lab 5: GLS of Bad MUX
-
-Perform GLS on the `bad_mux`.  
-Expect simulation mismatches or warnings due to above issues.
-
-![lab5](https://github.com/user-attachments/assets/2e698404-27b5-4c4a-a811-41b5fc13db77)
-
----
-
-### Lab 6: Blocking Assignment Caveat
-
-Verilog code:
-
-```verilog
-module blocking_caveat (input a, input b, input c, output reg d);
-  reg x;
-  always @ (*) begin
-    d = x & c;
-    x = a | b;
-  end
 endmodule
 ```
 
-#### What’s wrong?
-- The order of assignments causes `d` to use the old value of `x`—not the newly computed value.
-- **Best Practice:** Assign intermediate variables before using them.
+### Functional Evaluation
 
-**Corrected order:**
+- Reset forces output to `0`
+- Otherwise the flip-flop continuously stores `1`
+
+---
+
+## Lab 6: Constant Logic Simplification
+
+### Verilog Design (`dff_const2.v`)
+
 ```verilog
-always @ (*) begin
-  x = a | b;
-  d = x & c;
+module dff_const2 (
+    input clk,
+    input reset,
+    output reg q
+);
+
+always @(posedge clk, posedge reset)
+begin
+    if (reset)
+        q <= 1'b1;
+    else
+        q <= 1'b1;
 end
+
+endmodule
 ```
 
-![lab6](https://github.com/user-attachments/assets/42cac594-0008-4c7b-b415-43e6565b6081)
+### Functional Evaluation
+
+Since both conditions assign logic HIGH, synthesis removes the register entirely and ties the output directly to VCC.
 
 ---
 
-### Lab 7: Synthesis of the Blocking Caveat Module
+# 5. Learning Outcome
 
-Synthesize the corrected version of the module and observe the results.
+By completing this workshop, you learned:
 
-![lab7](https://github.com/user-attachments/assets/833bfacc-3b76-40fa-814c-47f0d783a6e0)
-
----
-
-## 5. Summary
-
-- **Gate-Level Simulation (GLS):** Validates netlist functionality, timing, and testability after synthesis.
-- **Synthesis-Simulation Mismatch:** Avoid by using synthesizable, unambiguous RTL code.
-- **Blocking vs. Non-Blocking:** Use blocking (`=`) for combinational, non-blocking (`<=`) for sequential logic.
-- **Labs:** Reinforce key concepts and highlight common RTL pitfalls.
-
----
-
-> [!TIP]
->  Always simulate both your RTL and gate-level netlist, and review warnings from synthesis and simulation tools!
+- Constant propagation techniques
+- FSM optimization strategies
+- Cell cloning and fan-out balancing
+- Sequential retiming concepts
+- Yosys-based synthesis optimization flows
 
 ---
