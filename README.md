@@ -1,62 +1,93 @@
-# RTL Design and Synthesis Workshop
+# RTL Design and Synthesis Workshop using Verilog & SKY130
 
-A workshop focused on RTL design, simulation, synthesis, and gate-level understanding using open-source tools and the SKY130 standard cell ecosystem.
+---
 
-## Overview
+# Overview
 
-The semiconductor industry is rapidly moving toward open-source toolchains and PDKs such as SKY130 for chip prototyping and tapeout. This workshop provides an end-to-end view of RTL design for custom silicon and helps learners build practical skills in simulation, synthesis, and netlist generation.
+The semiconductor industry is rapidly transitioning toward open-source EDA toolchains and Process Design Kits (PDKs) such as **SKY130** for chip prototyping and silicon tapeout.
 
-## Course Highlights
+This workshop provides a complete hands-on introduction to:
 
-- Complete simulation-to-synthesis workflow
-- Open-source tools: Icarus Verilog, GTKWave, Yosys
-- Real RTL projects using Verilog
-- SKY130-based synthesis with standard cells
-- Ideal for VLSI jobs and tapeout exposure
+- RTL Design
+- Verilog HDL
+- Simulation
+- Synthesis
+- Gate-Level Verification
 
-## Tools You Will Use
+using industry-relevant open-source tools.
 
-- Icarus Verilog for simulation
-- GTKWave for waveform viewing
-- Yosys for logic synthesis
-- SKY130 standard cell libraries
-- Linux terminal or open-source FPGA environments
+The workshop blends theory, simulation, and synthesis, giving students an end-to-end understanding of digital hardware design workflows.
 
-## Lab Exercises
+---
 
-- Create and simulate Verilog-based digital modules
-- Analyze timing and logic behavior using GTKWave
-- Write testbenches for behavioral and gate-level models
-- Perform RTL synthesis using Yosys mapped to SKY130
-- Generate netlists and understand synthesis reports
+# Tools Used
 
-## Curriculum
+| Tool | Purpose |
+|---|---|
+| **iverilog** | Verilog simulation |
+| **GTKWave** | Waveform visualization |
+| **Yosys** | RTL synthesis |
+| **SKY130 Standard Cell Libraries** | Technology mapping |
+| **Linux Environment** | Development workflow |
 
-This workshop blends theory, simulation, and synthesis to give an end-to-end understanding of RTL design for custom silicon. The content gradually transitions from HDL coding to gate-level netlist generation.
+---
 
-## Modulewise Content
+# Modulewise Content
 
-### Module 1
-Intro to Verilog and HDL simulation with Icarus Verilog and GTKWave
+## Module 1
+Introduction to Verilog and HDL simulation using:
+- iverilog
+- GTKWave
 
-### Module 2
-RTL coding styles, module design, and simulation debugging
+## Module 2
+RTL coding styles, module design, and simulation debugging.
 
-### Module 3
-RTL design labs and testbenches for digital blocks
+## Module 3
+RTL design labs and behavioral testbench development.
 
-### Module 4
-Introduction to Yosys and synthesis concepts
+## Module 4
+Introduction to synthesis concepts using Yosys.
 
-### Module 5
-RTL to gate-level netlist using Yosys with SKY130 standard cells
+## Module 5
+RTL-to-Gate-Level synthesis using SKY130 standard cell libraries.
 
-## Learning Outcomes
+---
 
-By the end of the workshop, you will be able to:
+# Requirements
 
-- Build and simulate RTL modules in Verilog
-- Debug functional behavior using waveform analysis
-- Understand synthesis and gate-level netlist generation
-- Use Yosys and SKY130 libraries for practical synthesis flows
-- Connect RTL coding style with hardware implementation results
+Install the following tools before starting the workshop:
+
+```bash
+sudo apt install iverilog gtkwave yosys
+```
+
+Optional:
+- Ubuntu / Linux Environment
+- SKY130 Standard Cell Libraries
+
+---
+
+# References
+
+- https://github.com/YosysHQ/yosys
+- https://github.com/steveicarus/iverilog
+- https://gtkwave.sourceforge.net/
+- https://github.com/google/skywater-pdk
+
+---
+
+# Acknowledgement
+
+Special thanks to:
+
+- **VLSI System Design (VSD)** for providing open-source VLSI education and practical RTL-to-GDSII learning resources.
+- Workshop instructors and contributors for guidance and support.
+- Open-source EDA communities supporting accessible silicon design education.
+
+---
+
+# Author
+
+Maintained for learning and educational purposes.
+
+---
