@@ -1,244 +1,182 @@
-# RTL Design and Synthesis Workshop – Day 3
+# RTL Design and Synthesis Workshop – Day 4
+
+## 1. Gate-Level Simulation (GLS) Essentials
+
+### Understanding GLS
+
+Gate-Level Simulation (GLS) is a verification methodology where the post-synthesis gate-level netlist is simulated to confirm structural and functional implementation accuracy. It validates that the physical hardware mapping matches the logical assumptions made during RTL coding.
+
+**Verification Objectives:**
+- **Functional Correctness** → Ensures the synthesis compiler did not alter intent.
+- **Timing Behavior** → Identifies real-world timing violations like setup and hold errors using Standard Delay Format (SDF) files.
+- **Power Estimates** → Enables switching activity analysis for high-accuracy power reporting.
+- **Test Structures** → Confirms the behavior of Design For Testability (DFT) networks and internal scan chains.
 
 ---
 
-# 1. Combinational Optimization Techniques
+### GLS Classifications
 
-## Constant Propagation
-
-Constant propagation is an optimization technique where compile-time constants are substituted directly into expressions to eliminate redundant variables.
-
-Replacing known variables with static values allows the synthesis engine to:
-- simplify gate structures,
-- remove dead logic,
-- reduce hardware complexity.
-
-### Benefits
-
-- **Reduced Complexity** → Cleaner logic structures and lower gate count.
-- **Performance Improvement** → Reduced propagation delay and improved timing.
-- **Resource Optimization** → Eliminates unnecessary logic resources.
+- **Functional GLS** → Zero-delay or unit-delay logical simulation focused entirely on functional state tracking.
+- **Timing GLS** → Full delay-annotated simulation utilizing back-annotated physical interconnect timing data.
 
 ---
 
-## State Optimization
+## 2. Synthesis-Simulation Mismatch
 
-State optimization improves the efficiency of Finite State Machine (FSM) implementations.
+A synthesis-simulation mismatch happens when pre-synthesis RTL behavioral simulations diverge from the post-synthesis gate-level simulation or physical hardware execution.
 
-### Key Implementation Tasks
-
-- **State Reduction** → Removes redundant or equivalent states.
-- **State Encoding** → Uses optimized encoding methods such as:
-  - One-Hot
-  - Binary
-  - Gray Encoding
-- **Logic Minimization** → Reduces combinational hardware complexity.
-- **Power Optimization** → Uses techniques like clock gating to reduce dynamic power.
+**Common Causes:**
+- **Non-Synthesizable Constructs** → Including algorithmic testbench structures (`initial`, `#delay` statements) in production hardware code.
+- **Incomplete Sensitivity Lists** → Leaving essential feedback signals out of behavioral evaluation blocks, triggering simulation latch behaviors.
+- **Ambiguous Case Assignments** → Writing incomplete logic loops that force synthesis engines to infer unintended storage latches.
 
 ---
 
-# 2. Sequential Optimization Techniques
+## 3. Procedural Assignment Typing
 
-## Cloning
+### Blocking Statements (`=`)
 
-Cloning duplicates highly loaded logic cells to reduce fan-out delay and improve timing performance.
-
-### Workflow
-
-1. Identify highly loaded critical cells.
-2. Duplicate the required logic block.
-3. Split the fan-out load between original and cloned cells.
-4. Perform placement and rerouting.
-5. Re-check timing closure.
+- **Syntax** → `=`
+- **Execution Profile** → Sequential evaluation; blocks any subsequent statement lines until the current equation is fully executed.
+- **Primary Use Case** → Combinational block descriptions (`always @(*)`) and internal variable definitions.
 
 ---
 
-## Retiming
+### Non-Blocking Statements (`<=`)
 
-Retiming shifts registers across combinational logic to reduce critical path delay without changing functionality.
-
-### Workflow
-
-1. **Graph Representation** → Model the design as a timing graph.
-2. **Register Repositioning** → Move registers across logic stages.
-3. **Constraint Analysis** → Verify timing and functionality.
-4. **Optimization** → Improve clock frequency and timing.
+- **Syntax** → `<=`
+- **Execution Profile** → Scheduled concurrent evaluation; captures values simultaneously and updates states at the end of the current time step.
+- **Primary Use Case** → Sequential logic modeling blocks tied to specific clock boundaries (`always @(posedge clk)`).
 
 ---
 
-# 3. Labs: Combinational Optimization
+### Architectural Assignment Comparison
 
-## Lab 1: Ternary Conditional Optimization
+| Core Feature | Blocking Assignments (`=`) | Non-Blocking Assignments (`<=`) |
+| :--- | :--- | :--- |
+| **Operator Syntax** | `=` | `<=` |
+| **Execution Mechanics** | Immediate, step-by-step procedural order | Scheduled parallel updates at timestep end |
+| **State Resolution** | Instant updates impact following statements | Evaluated concurrently, minimizing order reliance |
+| **Design Domain** | Combinational equations / Temp math lines | Sequential storage registers / Edge flip-flops |
+| **Hardware Extrapolation** | Infers combinational logic gates | Infers hardware-bound sequential registers |
 
-### Verilog Design (`opt_check.v`)
+---
 
+## 4. Labs: Simulation and Synthesis Verification
+
+### Lab 1: Ternary Operator MUX
+
+Verilog Design (`ternary_operator_mux.v`):
 ```verilog
-module opt_check (
-    input a,
-    input b,
-    output y
-);
+module ternary_operator_mux (input i0, input i1, input sel, output y);
 
-assign y = a ? b : 1'b0;
+assign y = sel ? i1 : i0;
 
 endmodule
-```
+Functional Evaluation:
 
-### Functional Evaluation
+Implements a direct, explicit data route where output y selects data line i1 when control sel is high, defaulting to i0 when low.
 
-- If `a = 1`, output follows `b`
-- If `a = 0`, output becomes `0`
+Lab 2: Standard MUX Synthesis
+Invoke the Yosys compilation script to synthesize the ternary multiplexer structure into target hardware cells.
 
-### Optimization Command
+Run synthesis script:
 
-Execute between `synth -top` and `abc -liberty`:
+Bash
+yosys -p "read_liberty -lib sky130_fd_sc_hd__tt_025C_1v80.lib; read_verilog ternary_operator_mux.v; synth -top ternary_operator_mux; abc -liberty sky130_fd_sc_hd__tt_025C_1v80.lib; show"
+Lab 3: Gate-Level Simulation (GLS) Execution
+Compile the functional standard cell libraries alongside the gate netlist and stimulus testbench.
 
-```bash
-opt_clean -purge
-```
+Compile netlist simulation:
 
----
+Bash
+iverilog -o gls_mux_sim.out /path/to/primitives.v /path/to/sky130_fd_sc_hd.v ternary_operator_mux.v testbench.v
+Execute simulation binary:
 
-## Lab 2: Direct Constant Mapping
+Bash
+./gls_mux_sim.out
+Open visual waveforms:
 
-### Verilog Design (`opt_check2.v`)
+Bash
+gtkwave testbench.vcd
+Lab 4: Incomplete Sensitivity List Pitfalls
+Verilog Design (bad_mux.v):
 
-```verilog
-module opt_check2 (
-    input a,
-    input b,
-    output y
-);
+Verilog
+module bad_mux (input i0, input i1, input sel, output reg y);
 
-assign y = a ? 1'b1 : b;
-
-endmodule
-```
-
-### Functional Evaluation
-
-Implements OR-style mux logic:
-- When `a = 1`, output becomes logic HIGH.
-- Otherwise output follows `b`.
-
----
-
-## Lab 3: Multiplexer Optimization Test
-
-### Verilog Design (`opt_check3.v`)
-
-```verilog
-module opt_check3 (
-    input a,
-    input b,
-    output y
-);
-
-assign y = a ? 1'b1 : b;
-
-endmodule
-```
-
-### Functional Evaluation
-
-Implements a simple 2:1 multiplexer structure.
-
----
-
-## Lab 4: Nested Logic Pruning
-
-### Verilog Design (`opt_check4.v`)
-
-```verilog
-module opt_check4 (
-    input a,
-    input b,
-    input c,
-    output y
-);
-
-assign y = a ? (b ? (a & c) : c) : (!c);
-
-endmodule
-```
-
-### Functional Evaluation
-
-The synthesis engine removes redundant logic and simplifies the expression to:
-
-```verilog
-y = a ? c : !c;
-```
-
----
-
-# 4. Labs: Sequential Optimization
-
-## Lab 5: Fixed Value Asynchronous Register
-
-### Verilog Design (`dff_const1.v`)
-
-```verilog
-module dff_const1 (
-    input clk,
-    input reset,
-    output reg q
-);
-
-always @(posedge clk, posedge reset)
+always @ (sel)
 begin
-    if (reset)
-        q <= 1'b0;
-    else
-        q <= 1'b1;
+    if (sel)
+        y <= i1;
+    else 
+        y <= i0;
 end
 
 endmodule
-```
+Bug Analysis:
 
-### Functional Evaluation
+Sensitivity Truncation → The block only triggers when sel changes state. Changes on data inputs i0 or i1 are ignored by simulators, while synthesis engines infer combinational gates—generating a severe simulation-synthesis divergence.
 
-- Reset forces output to `0`
-- Otherwise the flip-flop continuously stores `1`
+Improper Assignment Style → Employs sequential non-blocking operators (<=) inside a purely combinational block.
 
----
+Remediated Code Block:
 
-## Lab 6: Constant Logic Simplification
-
-### Verilog Design (`dff_const2.v`)
-
-```verilog
-module dff_const2 (
-    input clk,
-    input reset,
-    output reg q
-);
-
-always @(posedge clk, posedge reset)
+Verilog
+always @ (*)
 begin
-    if (reset)
-        q <= 1'b1;
+    if (sel)
+        y = i1;
     else
-        q <= 1'b1;
+        y = i0;
+end
+Lab 5: Simulating Mismatch Behaviors
+Run Gate-Level Simulation targeting the flawed bad_mux netlist to observe look-ahead behavioral mismatch errors and gate warning output inside GTKWave.
+
+Execute mismatch simulation:
+
+Bash
+iverilog -o bad_mux_sim.out /path/to/primitives.v /path/to/sky130_fd_sc_hd.v bad_mux.v tb_bad_mux.v
+./bad_mux_sim.out
+Lab 6: Blocking Race Conditions
+Verilog Design (blocking_caveat.v):
+
+Verilog
+module blocking_caveat (input a, input b, input c, output reg d);
+
+reg x;
+
+always @ (*)
+begin
+    d = x & c;
+    x = a | b;
 end
 
 endmodule
-```
+Bug Analysis:
 
-### Functional Evaluation
+Because blocking assignments evaluate instantly, output d resolves using the stale, previous-evaluation value of register x, rather than updating with the current logic value of a | b.
 
-Since both conditions assign logic HIGH, synthesis removes the register entirely and ties the output directly to VCC.
+Remediated Code Block:
 
----
+Verilog
+always @ (*)
+begin
+    x = a | b;
+    d = x & c;
+end
+Lab 7: Synthesis Validation of Race Constraints
+Synthesize the updated race-free code structure using Yosys to verify that intermediate logic evaluations resolve to clean, hazard-free physical gates.
 
-# 5. Learning Outcome
+Run synthesis verification:
 
-By completing this workshop, you learned:
+Bash
+yosys -p "read_liberty -lib sky130_fd_sc_hd__tt_025C_1v80.lib; read_verilog blocking_caveat.v; synth -top blocking_caveat; show"
+5. Learning Outcome
+Maintained clean simulation-synthesis alignment by applying rigid hardware description practices.
 
-- Constant propagation techniques
-- FSM optimization strategies
-- Cell cloning and fan-out balancing
-- Sequential retiming concepts
-- Yosys-based synthesis optimization flows
+Isolated gate structural delays and timing constraints through comprehensive Gate-Level Simulations.
 
----
+Corrected race conditions caused by poor procedural expression order inside combinational always blocks.
+
+Applied blocking (=) and non-blocking (<=) syntax constraints correctly across complex digital design architectures.
